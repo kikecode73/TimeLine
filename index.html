@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TimeLine">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>Time Line v3.2 - Cronómetro Multi-Tarea y Diagramas</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- v3.0: las bibliotecas de exportación se cargan bajo demanda (app.js) -->
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header y Barra de Controles Globales -->
+    <header class="app-header">
+      <div class="logo-area">
+        <h1>⏱️ Time Line <small>v3.2</small></h1>
+        <span class="badge">Cronometraje multitarea y análisis de tiempos</span>
+      </div>
+      <div class="header-actions">
+        <button id="btnAddPrimary" class="btn btn-primary-add">+ Agregar Tarea Principal (Máx. 15)</button>
+        <button id="btnSaveJSON" class="btn btn-export">💾 Guardar proyecto</button>
+        <button id="btnLoadJSON" class="btn btn-export">📂 Abrir proyecto</button>
+        <input type="file" id="fileLoadJSON" accept=".json,application/json" hidden>
+        <button id="btnExportExcel" class="btn btn-export btn-excel">📊 Exportar Excel</button>
+        <button id="btnExportPPT" class="btn btn-export btn-ppt">📑 Exportar PPT</button>
+        <button id="btnExportPDF" class="btn btn-export btn-pdf">📕 Exportar PDF</button>
+        <button id="btnResetAll" class="btn btn-danger">↺ Reiniciar Todo</button>
+      </div>
+    </header>
+
+    <!-- Resumen General -->
+    <section class="summary-banner">
+      <div class="summary-card">
+        <span class="label">Tareas Principales:</span>
+        <span id="statPrimaryCount" class="val">0 / 15</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Tareas Secundarias Totales:</span>
+        <span id="statSecondaryCount" class="val">0</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Tiempo Activo Total:</span>
+        <span id="statTotalActive" class="val font-mono">00:00:00.00</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">Tiempos Muertos (TO) Totales:</span>
+        <span id="statTotalTO" class="val font-mono text-orange">00:00:00.00</span>
+      </div>
+      <div class="summary-card highlight">
+        <span class="label">TIEMPO BRUTO PROYECTO:</span>
+        <span id="statGrandTotal" class="val font-mono">00:00:00.00</span>
+      </div>
+      <div class="summary-card">
+        <span class="label">TIEMPO NETO (sin TO excluidos):</span>
+        <span id="statNet" class="val font-mono">00:00:00.00</span>
+      </div>
+    </section>
+
+    <!-- Contenedor Principal de Tareas -->
+    <main id="tasksContainer" class="tasks-container">
+      <!-- Las tareas principales se insertarán dinámicamente aquí -->
+    </main>
+  </div>
+
+  <!-- Modal para Selección de Modo de Exportación Excel -->
+  <div id="exportModal" class="modal-overlay hidden">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="Exportar a Excel">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📊</span>
+          <div>
+            <h3>Exportar a Microsoft Excel (.xlsx)</h3>
+            <p class="modal-subtitle">Selecciona cómo deseas ver la información en Excel:</p>
+          </div>
+        </div>
+        <button id="modalCloseBtn" class="modal-close" title="Cerrar">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="export-options-grid">
+          <!-- Opción 1: Modo Tabla -->
+          <div class="export-option-card" id="cardExportTable">
+            <div class="option-badge">📋 OPCIÓN 1</div>
+            <h4>Modo Tabla de Datos</h4>
+            <p class="option-desc">
+              Exporta una hoja de cálculo estructurada en formato tabla con códigos WBS, nombres de tareas, tiempos de inicio relativos, duraciones en formato <code>[h]:mm:ss.00</code> y registro de Time Outs (TO).
+            </p>
+            <div class="option-feature-tag">Ideal para análisis de datos, filtros y fórmulas</div>
+            <button id="btnConfirmTable" class="btn btn-primary-add btn-option-action">
+              📥 Exportar Modo Tabla
+            </button>
+          </div>
+
+          <!-- Opción 2: Modo Diagrama Gantt -->
+          <div class="export-option-card highlight" id="cardExportGantt">
+            <div class="option-badge badge-gantt">📊 OPCIÓN 2 (RECOMENDADO)</div>
+            <h4>Modo Diagrama Gantt</h4>
+            <p class="option-desc">
+              Exporta el cronograma visual idéntico a la aplicación web: barras en cascada, bloques amarillos de Time Out (TO), barras verdes por subtarea, marcas de tiempo y columna TOTAL.
+            </p>
+            <div class="option-feature-tag tag-gantt">Visualmente idéntico a la app web y plantilla original</div>
+            <button id="btnConfirmGantt" class="btn btn-excel btn-option-action">
+              📊 Exportar Modo Diagrama Gantt
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modalCancelBtn" class="btn btn-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.warn));
+    }
+  </script>
+</body>
+</html>
